@@ -38,7 +38,7 @@ Each prediction includes:
 ## 🧪 Demo Output
 
 <p align="center">
-  <img src="assets/result_example.png" alt="Result Example" width="700"/>
+  <img src="assets/result-2.png" alt="Result Example" width="700"/>
   <br/>
   <i>Fig 2: Output with prediction, description, and medical suggestions</i>
 </p>
@@ -53,6 +53,9 @@ Each prediction includes:
 4. 🩺 The app displays a prediction with helpful medical information.
 
 ---
+## 🚀 Live Demo
+
+Click here to try the app: [Skin Disease Detector](https://skin-disease-detector.streamlit.app/)
 
 ## ⚠️ Disclaimer
 
