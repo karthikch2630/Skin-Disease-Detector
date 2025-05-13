@@ -12,13 +12,13 @@ os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 # Load the trained model
 model = load_model("skin_disease_model.h5")
 
-# Defining the classes
+# Define class names
 class_names = [
-    "Cellulitis", "Impetigo", "Athlete's Foot", "Nail Fungus", 
+    "Cellulitis", "Impetigo", "Athlete's Foot", "Nail Fungus",
     "Ringworm", "Cutaneous Larva Migrans", "Chickenpox", "Shingles"
 ]
 
-# Disease information dictionary
+# Disease info
 disease_info = {
     "Cellulitis": {
         "description": "Cellulitis is a bacterial infection of the skin and tissues beneath the skin.",
@@ -94,58 +94,98 @@ disease_info = {
     }
 }
 
-# Function to preprocess the image
+# Preprocess image
 def preprocess_image(img, target_size):
     img = img.resize(target_size)
     img = img_to_array(img)
     img = np.expand_dims(img, axis=0)
-    img = img / 255.0  # Normalize to [0, 1] range
+    img = img / 255.0
     return img
 
-# Streamlit app starts here
+# Main app
 def main():
-    st.title("Skin Disease Detector")
-    st.subheader("Upload an image of the skin condition, and the model will predict the disease.")
+    st.set_page_config(page_title="Skin Disease Detector", layout="centered")
 
-    # File uploader
-    uploaded_file = st.file_uploader("Upload an image file", type=["jpg", "jpeg", "png"])
+    # Custom CSS
+    st.markdown("""
+        <style>
+            .main { background-color: #f5f5f5; padding: 20px; }
+            .title { font-size: 40px; color: #2c3e50; font-weight: bold; text-align: center; }
+            .subtitle { font-size: 20px; text-align: center; color: #555; margin-top: -10px; }
+            .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #999; }
+        </style>
+    """, unsafe_allow_html=True)
 
-    # Display uploaded image and predict button
+    # Title
+    st.markdown('<div class="title">🧬 Skin Disease Detector</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subtitle">Upload an image to predict and learn about skin conditions</div>', unsafe_allow_html=True)
+    st.markdown("---")
+
+    # Expandable disease preview
+    with st.expander("📷 See examples of detectable conditions"):
+        col1, col2, col3, col4 = st.columns(4)
+
+        with col1:
+            st.image("skin-disease-datasaet/train_set/BA- cellulitis/BA- cellulitis (2).jpeg", caption="Cellulitis", use_container_width=True)
+            st.image("skin-disease-datasaet/train_set/BA-impetigo/4_BA-impetigo (34).jpg", caption="Impetigo", use_container_width=True)
+
+        with col2:
+            st.image("skin-disease-datasaet/train_set/FU-athlete-foot/FU-athlete-foot (2).jpg", caption="Athlete's Foot", use_container_width=True)
+            st.image("skin-disease-datasaet/train_set/FU-nail-fungus/_4_1433.jpg", caption="Nail Fungus", use_container_width=True)
+
+        with col3:
+            st.image("skin-disease-datasaet/train_set/FU-ringworm/6_FU-ringworm (9).jpg", caption="Ringworm", use_container_width=True)
+            st.image("skin-disease-datasaet/train_set/PA-cutaneous-larva-migrans/15_PA-cutaneous-larva-migrans (42).jpg", caption="Larva Migrans", use_container_width=True)
+        with col4:
+            st.image("skin-disease-datasaet/train_set/VI-chickenpox/7_VI-chickenpox (9).jpg", caption="Chickenpox", use_container_width=True)
+            st.image("skin-disease-datasaet/train_set/VI-shingles/9_VI-shingles (20).jpg", caption="Shingles", use_container_width=True)
+        st.markdown("---")
+
+    # Upload and detect
+    uploaded_file = st.file_uploader("📤 Upload a clear image of the skin condition (jpg/jpeg/png)", type=["jpg", "jpeg", "png"])
+
     if uploaded_file is not None:
-        # Open and display the image
         image = Image.open(uploaded_file)
-        st.image(image, caption="Uploaded Image", use_container_width=True)
+        st.image(image, caption="🖼 Uploaded Image", use_container_width=True)
 
-        # Process and predict when the "Detect" button is clicked
-        if st.button("Detect"):
+        if st.button("🔍 Detect"):
             with st.spinner("Analyzing the image..."):
-                # Preprocess the image
                 processed_image = preprocess_image(image, target_size=(150, 150))
-
-                # Predict the class
                 prediction = model.predict(processed_image)
                 predicted_class = class_names[np.argmax(prediction)]
                 confidence = np.max(prediction)
 
-                # Display the prediction
-                st.success(f"Prediction: {predicted_class}")
-                st.write(f"Confidence: {confidence * 100:.2f}%")
+                st.success(f"✅ Prediction: **{predicted_class}**")
+                st.write(f"📊 Confidence: **{confidence * 100:.2f}%**")
 
-                # Retrieve additional information
-                disease_details = disease_info.get(predicted_class, None)
+                disease_details = disease_info.get(predicted_class)
                 if disease_details:
-                    st.subheader("Disease Information")
-                    st.write(disease_details["description"])
+                    st.markdown("## 🦠 Detected Disease Information")
 
-                    st.subheader("Recommended Medications")
-                    st.write(", ".join(disease_details["medications"]))
+                    col1, col2 = st.columns([2, 1])
+                    with col1:
+                        st.markdown(f"""
+                            <div style="background-color: #fcefee; padding: 15px; border-radius: 10px;">
+                                <h3 style="color:#d6336c;">🩺 Disease Name: <strong>{predicted_class}</strong></h3>
+                                <p style = "color: black;"><strong>Description:</strong> {disease_details['description']}</p>
+                            </div>
+                        """, unsafe_allow_html=True)
+                    with col2:
+                        st.metric(label="📊 Confidence", value=f"{confidence * 100:.2f} %")
 
-                    st.subheader("Precautions")
-                    for precaution in disease_details["precautions"]:
-                        st.write(f"- {precaution}")
+                    st.markdown("---")
+                    with st.expander("💊 Recommended Medications"):
+                        for med in disease_details["medications"]:
+                            st.markdown(f"- {med}")
 
-                    # Include a warning
-                    st.warning("This information is for educational purposes only. Please consult a dermatologist for a proper diagnosis and treatment.")
+                    with st.expander("⚠️ Precautions to Follow"):
+                        for precaution in disease_details["precautions"]:
+                            st.markdown(f"- {precaution}")
 
+                    st.info("📌 **Note:** This prediction is for educational purposes only. Please consult a certified dermatologist.")
+    else:
+        st.warning("👆 Please upload an image to get started.")
+
+# Run
 if __name__ == "__main__":
     main()
